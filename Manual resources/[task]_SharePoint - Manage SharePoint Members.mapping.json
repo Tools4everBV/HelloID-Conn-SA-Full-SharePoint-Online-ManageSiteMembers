@@ -1,0 +1,18 @@
+[
+    {
+        "name":  "groupId",
+        "value":  "{{form.sharepointGroups.GroupName}}"
+    },
+    {
+        "name":  "MembersToAdd",
+        "value":  "{{form.members.leftToRight.toJsonString}}"
+    },
+    {
+        "name":  "MembersToRemove",
+        "value":  "{{form.members.rightToLeft.toJsonString}}"
+    },
+    {
+        "name":  "siteUrl",
+        "value":  "{{form.sites.Url}}"
+    }
+]
