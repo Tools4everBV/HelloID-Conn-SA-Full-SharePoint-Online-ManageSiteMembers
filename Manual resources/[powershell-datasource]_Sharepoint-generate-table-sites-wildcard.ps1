@@ -18,7 +18,7 @@ if ($connected)
 {    
 	try {
         #Write-Output $searchValue
-	    $sites = Get-SPOSite -Filter "url -like '*$($searchValue)*' -and url -like '/sites'" -Limit ALL
+	    $sites = Get-SPOSite -Filter "url -like 'sites/$($searchValue)'" -Limit ALL
 
        ForEach($Site in $sites)
         {

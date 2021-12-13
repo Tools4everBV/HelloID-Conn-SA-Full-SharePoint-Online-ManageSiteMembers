@@ -6,7 +6,13 @@ This HelloID Service Automation Delegated Form provides SharePoint Online functi
  3. Select a sitegroup of which the members will be managed
  4. Manage the members of the selected group
  5. Confirm the changes
- 
+
+## Versioning
+| Version | Description | Date |
+| - | - | - |
+| 1.0.1   | Added version number and updated all-in-one script | 2021/12/13  |
+| 1.0.0   | Initial release | 2020/12/05  |
+
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
 * [Description](#description)
@@ -58,5 +64,8 @@ This Powershell data source gets members of the selected SharePoint group.
 ### Delegated form task '[task]_SharePoint - Manage SharePoint Members'
 This delegated form task will add and/or remove members from the selected SharePoint group.
 
-# HelloID Docs
+## Getting help
+_If you need help, feel free to ask questions on our [forum](https://forum.helloid.com/forum/helloid-connectors/service-automation/180-helloid-sa-sharepoint-online-manage-site-members)_
+
+## HelloID Docs
 The official HelloID documentation can be found at: https://docs.helloid.com/
