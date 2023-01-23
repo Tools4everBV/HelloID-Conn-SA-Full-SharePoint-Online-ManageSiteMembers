@@ -5,7 +5,7 @@ $connected = $false
 try {
 	Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 	$pwd = ConvertTo-SecureString -string $SharePointAdminPWD -AsPlainText -Force
-	$cred = New-Object System.Management.Automation.PSCredential $SharePointAdminUser, $pwd
+	$cred = [System.Management.Automation.PSCredential]::new($SharePointAdminUser,$pwd)
 	$null = Connect-SPOService -Url $SharePointBaseUrl -Credential $cred
     HID-Write-Status -Message "Connected to Microsoft SharePoint" -Event Information
     HID-Write-Summary -Message "Connected to Microsoft SharePoint" -Event Information
