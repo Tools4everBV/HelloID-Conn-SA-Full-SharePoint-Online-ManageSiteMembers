@@ -1,12 +1,11 @@
 # Set TLS to accept TLS, TLS 1.1 and TLS 1.2
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls12
-
 #HelloID variables
 #Note: when running this script inside HelloID; portalUrl and API credentials are provided automatically (generate and save API credentials first in your admin panel!)
 $portalUrl = "https://CUSTOMER.helloid.com"
 $apiKey = "API_KEY"
 $apiSecret = "API_SECRET"
-$delegatedFormAccessGroupNames = @("Users") #Only unique names are supported. Groups must exist!
+$delegatedFormAccessGroupNames = @("") #Only unique names are supported. Groups must exist!
 $delegatedFormCategories = @("SharePoint") #Only unique names are supported. Categories will be created if not exists
 $script:debugLogging = $false #Default value: $false. If $true, the HelloID resource GUIDs will be shown in the logging
 $script:duplicateForm = $false #Default value: $false. If $true, the HelloID resource names will be changed to import a duplicate Form
@@ -16,23 +15,7 @@ $script:duplicateFormSuffix = "_tmp" #the suffix will be added to all HelloID re
 #NOTE: You can also update the HelloID Global variable values afterwards in the HelloID Admin Portal: https://<CUSTOMER>.helloid.com/admin/variablelibrary
 $globalHelloIDVariables = [System.Collections.Generic.List[object]]@();
 
-#Global variable #1 >> SharePointAdminPWD
-$tmpName = @'
-SharePointAdminPWD
-'@ 
-$tmpValue = "" 
-$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "True"});
-
-#Global variable #2 >> SharePointAdminUser
-$tmpName = @'
-SharePointAdminUser
-'@ 
-$tmpValue = @'
-user@customer.onmicrosoft.com
-'@ 
-$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
-
-#Global variable #3 >> SharePointBaseUrl
+#Global variable #1 >> SharePointBaseUrl
 $tmpName = @'
 SharePointBaseUrl
 '@ 
@@ -41,35 +24,52 @@ https://customer-admin.sharepoint.com
 '@ 
 $globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
 
+#Global variable #2 >> SharePointAdminPWD
+$tmpName = @'
+SharePointAdminPWD
+'@ 
+$tmpValue = "" 
+$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "True"});
+
+#Global variable #3 >> SharePointAdminUser
+$tmpName = @'
+SharePointAdminUser
+'@ 
+$tmpValue = @'
+user@customer.onmicrosoft.com
+'@ 
+$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
+
 #Global variable #4 >> AADAppId
 $tmpName = @'
 AADAppId
 '@ 
 $tmpValue = @'
-83ac862d-fe99-4bdc-8d2e-87405fdb2379
+71fb7f24-315a-47f8-8d54-ab76d4fa4b7d
 '@ 
 $globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
 
-#Global variable #5 >> AADAppSecret
-$tmpName = @'
-AADAppSecret
-'@ 
-$tmpValue = "" 
-$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "True"});
-
-#Global variable #6 >> AADtenantID
+#Global variable #5 >> AADtenantID
 $tmpName = @'
 AADtenantID
 '@ 
 $tmpValue = @'
-65fc161b-0c41-4cde-9908-dabf3cad26b6
+6b5db95a-9873-426a-90d8-b84baa033a05
+'@ 
+$globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
+
+#Global variable #6 >> AADAppSecret
+$tmpName = @'
+AADAppSecret
+'@ 
+$tmpValue = @'
+StN8Q~KYmuyifRZTajYk2GQn4svOaCobAIQ0ecFE
 '@ 
 $globalHelloIDVariables.Add([PSCustomObject]@{name = $tmpName; value = $tmpValue; secret = "False"});
 
 
 #make sure write-information logging is visual
 $InformationPreference = "continue"
-
 # Check for prefilled API Authorization header
 if (-not [string]::IsNullOrEmpty($portalApiBasic)) {
     $script:headers = @{"authorization" = $portalApiBasic}
@@ -83,7 +83,6 @@ if (-not [string]::IsNullOrEmpty($portalApiBasic)) {
     $script:headers = @{"authorization" = $Key}
     Write-Information "Using manual API credentials"
 }
-
 # Check for prefilled PortalBaseURL
 if (-not [string]::IsNullOrEmpty($portalBaseUrl)) {
     $script:PortalBaseUrl = $portalBaseUrl
@@ -92,10 +91,8 @@ if (-not [string]::IsNullOrEmpty($portalBaseUrl)) {
     $script:PortalBaseUrl = $portalUrl
     Write-Information "Using manual PortalURL: $script:PortalBaseUrl"
 }
-
 # Define specific endpoint URI
 $script:PortalBaseUrl = $script:PortalBaseUrl.trim("/") + "/"  
-
 # Make sure to reveive an empty array using PowerShell Core
 function ConvertFrom-Json-WithEmptyArray([string]$jsonString) {
     # Running in PowerShell Core?
@@ -107,16 +104,13 @@ function ConvertFrom-Json-WithEmptyArray([string]$jsonString) {
         return ,$r  # Force return value to be an array using a comma
     }
 }
-
 function Invoke-HelloIDGlobalVariable {
     param(
         [parameter(Mandatory)][String]$Name,
         [parameter(Mandatory)][String][AllowEmptyString()]$Value,
         [parameter(Mandatory)][String]$Secret
     )
-
     $Name = $Name + $(if ($script:duplicateForm -eq $true) { $script:duplicateFormSuffix })
-
     try {
         $uri = ($script:PortalBaseUrl + "api/v1/automation/variables/named/$Name")
         $response = Invoke-RestMethod -Method Get -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false
@@ -129,12 +123,11 @@ function Invoke-HelloIDGlobalVariable {
                 secret   = $Secret;
                 ItemType = 0;
             }    
-            $body = ConvertTo-Json -InputObject $body
+            $body = ConvertTo-Json -InputObject $body -Depth 100
     
             $uri = ($script:PortalBaseUrl + "api/v1/automation/variable")
             $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $body
             $variableGuid = $response.automationVariableGuid
-
             Write-Information "Variable '$Name' created$(if ($script:debugLogging -eq $true) { ": " + $variableGuid })"
         } else {
             $variableGuid = $response.automationVariableGuid
@@ -144,7 +137,6 @@ function Invoke-HelloIDGlobalVariable {
         Write-Error "Variable '$Name', message: $_"
     }
 }
-
 function Invoke-HelloIDAutomationTask {
     param(
         [parameter(Mandatory)][String]$TaskName,
@@ -158,7 +150,6 @@ function Invoke-HelloIDAutomationTask {
     )
     
     $TaskName = $TaskName + $(if ($script:duplicateForm -eq $true) { $script:duplicateFormSuffix })
-
     try {
         $uri = ($script:PortalBaseUrl +"api/v1/automationtasks?search=$TaskName&container=$AutomationContainer")
         $responseRaw = (Invoke-RestMethod -Method Get -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false) 
@@ -166,7 +157,6 @@ function Invoke-HelloIDAutomationTask {
     
         if([string]::IsNullOrEmpty($response.automationTaskGuid) -or $ForceCreateTask -eq $true) {
             #Create Task
-
             $body = @{
                 name                = $TaskName;
                 useTemplate         = $UseTemplate;
@@ -175,12 +165,11 @@ function Invoke-HelloIDAutomationTask {
                 objectGuid          = $ObjectGuid;
                 variables           = (ConvertFrom-Json-WithEmptyArray($Variables));
             }
-            $body = ConvertTo-Json -InputObject $body
+            $body = ConvertTo-Json -InputObject $body -Depth 100
     
             $uri = ($script:PortalBaseUrl +"api/v1/automationtasks/powershell")
             $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $body
             $taskGuid = $response.automationTaskGuid
-
             Write-Information "Powershell task '$TaskName' created$(if ($script:debugLogging -eq $true) { ": " + $taskGuid })"
         } else {
             #Get TaskGUID
@@ -190,10 +179,8 @@ function Invoke-HelloIDAutomationTask {
     } catch {
         Write-Error "Powershell task '$TaskName', message: $_"
     }
-
     $returnObject.Value = $taskGuid
 }
-
 function Invoke-HelloIDDatasource {
     param(
         [parameter(Mandatory)][String]$DatasourceName,
@@ -205,9 +192,7 @@ function Invoke-HelloIDDatasource {
         [parameter()][String][AllowEmptyString()]$AutomationTaskGuid,
         [parameter(Mandatory)][Ref]$returnObject
     )
-
     $DatasourceName = $DatasourceName + $(if ($script:duplicateForm -eq $true) { $script:duplicateFormSuffix })
-
     $datasourceTypeName = switch($DatasourceType) { 
         "1" { "Native data source"; break} 
         "2" { "Static data source"; break} 
@@ -230,7 +215,7 @@ function Invoke-HelloIDDatasource {
                 script             = $DatasourcePsScript;
                 input              = (ConvertFrom-Json-WithEmptyArray($DatasourceInput));
             }
-            $body = ConvertTo-Json -InputObject $body
+            $body = ConvertTo-Json -InputObject $body -Depth 100
       
             $uri = ($script:PortalBaseUrl +"api/v1/datasource")
             $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $body
@@ -245,10 +230,8 @@ function Invoke-HelloIDDatasource {
     } catch {
       Write-Error "$datasourceTypeName '$DatasourceName', message: $_"
     }
-
     $returnObject.Value = $datasourceGuid
 }
-
 function Invoke-HelloIDDynamicForm {
     param(
         [parameter(Mandatory)][String]$FormName,
@@ -257,7 +240,6 @@ function Invoke-HelloIDDynamicForm {
     )
     
     $FormName = $FormName + $(if ($script:duplicateForm -eq $true) { $script:duplicateFormSuffix })
-
     try {
         try {
             $uri = ($script:PortalBaseUrl +"api/v1/forms/$FormName")
@@ -286,24 +268,21 @@ function Invoke-HelloIDDynamicForm {
     } catch {
         Write-Error "Dynamic form '$FormName', message: $_"
     }
-
     $returnObject.Value = $formGuid
 }
-
-
 function Invoke-HelloIDDelegatedForm {
     param(
         [parameter(Mandatory)][String]$DelegatedFormName,
         [parameter(Mandatory)][String]$DynamicFormGuid,
-        [parameter()][String][AllowEmptyString()]$AccessGroups,
+        [parameter()][Array][AllowEmptyString()]$AccessGroups,
         [parameter()][String][AllowEmptyString()]$Categories,
         [parameter(Mandatory)][String]$UseFaIcon,
         [parameter()][String][AllowEmptyString()]$FaIcon,
+        [parameter()][String][AllowEmptyString()]$task,
         [parameter(Mandatory)][Ref]$returnObject
     )
     $delegatedFormCreated = $false
     $DelegatedFormName = $DelegatedFormName + $(if ($script:duplicateForm -eq $true) { $script:duplicateFormSuffix })
-
     try {
         try {
             $uri = ($script:PortalBaseUrl +"api/v1/delegatedforms/$DelegatedFormName")
@@ -318,11 +297,16 @@ function Invoke-HelloIDDelegatedForm {
                 name            = $DelegatedFormName;
                 dynamicFormGUID = $DynamicFormGuid;
                 isEnabled       = "True";
-                accessGroups    = (ConvertFrom-Json-WithEmptyArray($AccessGroups));
                 useFaIcon       = $UseFaIcon;
                 faIcon          = $FaIcon;
-            }    
-            $body = ConvertTo-Json -InputObject $body
+                task            = ConvertFrom-Json -inputObject $task;
+            }
+            if(-not[String]::IsNullOrEmpty($AccessGroups)) { 
+                $body += @{
+                    accessGroups    = (ConvertFrom-Json-WithEmptyArray($AccessGroups));
+                }
+            }
+            $body = ConvertTo-Json -InputObject $body -Depth 100
     
             $uri = ($script:PortalBaseUrl +"api/v1/delegatedforms")
             $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $body
@@ -330,7 +314,6 @@ function Invoke-HelloIDDelegatedForm {
             $delegatedFormGuid = $response.delegatedFormGUID
             Write-Information "Delegated form '$DelegatedFormName' created$(if ($script:debugLogging -eq $true) { ": " + $delegatedFormGuid })"
             $delegatedFormCreated = $true
-
             $bodyCategories = $Categories
             $uri = ($script:PortalBaseUrl +"api/v1/delegatedforms/$delegatedFormGuid/categories")
             $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $bodyCategories
@@ -343,10 +326,10 @@ function Invoke-HelloIDDelegatedForm {
     } catch {
         Write-Error "Delegated form '$DelegatedFormName', message: $_"
     }
-
     $returnObject.value.guid = $delegatedFormGuid
     $returnObject.value.created = $delegatedFormCreated
 }
+
 <# Begin: HelloID Global Variables #>
 foreach ($item in $globalHelloIDVariables) {
 	Invoke-HelloIDGlobalVariable -Name $item.name -Value $item.value -Secret $item.secret 
@@ -654,25 +637,30 @@ Invoke-HelloIDDynamicForm -FormName $dynamicFormName -FormSchema $tmpSchema  -re
 
 <# Begin: Delegated Form Access Groups and Categories #>
 $delegatedFormAccessGroupGuids = @()
-foreach($group in $delegatedFormAccessGroupNames) {
-    try {
-        $uri = ($script:PortalBaseUrl +"api/v1/groups/$group")
-        $response = Invoke-RestMethod -Method Get -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false
-        $delegatedFormAccessGroupGuid = $response.groupGuid
-        $delegatedFormAccessGroupGuids += $delegatedFormAccessGroupGuid
-        
-        Write-Information "HelloID (access)group '$group' successfully found$(if ($script:debugLogging -eq $true) { ": " + $delegatedFormAccessGroupGuid })"
-    } catch {
-        Write-Error "HelloID (access)group '$group', message: $_"
+if(-not[String]::IsNullOrEmpty($delegatedFormAccessGroupNames)){
+    foreach($group in $delegatedFormAccessGroupNames) {
+        try {
+            $uri = ($script:PortalBaseUrl +"api/v1/groups/$group")
+            $response = Invoke-RestMethod -Method Get -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false
+            $delegatedFormAccessGroupGuid = $response.groupGuid
+            $delegatedFormAccessGroupGuids += $delegatedFormAccessGroupGuid
+            
+            Write-Information "HelloID (access)group '$group' successfully found$(if ($script:debugLogging -eq $true) { ": " + $delegatedFormAccessGroupGuid })"
+        } catch {
+            Write-Error "HelloID (access)group '$group', message: $_"
+        }
+    }
+    if($null -ne $delegatedFormAccessGroupGuids){
+        $delegatedFormAccessGroupGuids = ($delegatedFormAccessGroupGuids | Select-Object -Unique | ConvertTo-Json -Depth 100 -Compress)
     }
 }
-$delegatedFormAccessGroupGuids = ($delegatedFormAccessGroupGuids | Select-Object -Unique | ConvertTo-Json -Compress)
-
 $delegatedFormCategoryGuids = @()
 foreach($category in $delegatedFormCategories) {
     try {
         $uri = ($script:PortalBaseUrl +"api/v1/delegatedformcategories/$category")
         $response = Invoke-RestMethod -Method Get -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false
+        $response = $response | Where-Object {$_.name.en -eq $category}
+        
         $tmpGuid = $response.delegatedFormCategoryGuid
         $delegatedFormCategoryGuids += $tmpGuid
         
@@ -682,17 +670,15 @@ foreach($category in $delegatedFormCategories) {
         $body = @{
             name = @{"en" = $category};
         }
-        $body = ConvertTo-Json -InputObject $body
-
+        $body = ConvertTo-Json -InputObject $body -Depth 100
         $uri = ($script:PortalBaseUrl +"api/v1/delegatedformcategories")
         $response = Invoke-RestMethod -Method Post -Uri $uri -Headers $script:headers -ContentType "application/json" -Verbose:$false -Body $body
         $tmpGuid = $response.delegatedFormCategoryGuid
         $delegatedFormCategoryGuids += $tmpGuid
-
         Write-Information "HelloID Delegated Form category '$category' successfully created$(if ($script:debugLogging -eq $true) { ": " + $tmpGuid })"
     }
 }
-$delegatedFormCategoryGuids = (ConvertTo-Json -InputObject $delegatedFormCategoryGuids -Compress)
+$delegatedFormCategoryGuids = (ConvertTo-Json -InputObject $delegatedFormCategoryGuids -Depth 100 -Compress)
 <# End: Delegated Form Access Groups and Categories #>
 
 <# Begin: Delegated Form #>
@@ -700,95 +686,10 @@ $delegatedFormRef = [PSCustomObject]@{guid = $null; created = $null}
 $delegatedFormName = @'
 SharePoint - Manage Site Members
 '@
-Invoke-HelloIDDelegatedForm -DelegatedFormName $delegatedFormName -DynamicFormGuid $dynamicFormGuid -AccessGroups $delegatedFormAccessGroupGuids -Categories $delegatedFormCategoryGuids -UseFaIcon "True" -FaIcon "fa fa-puzzle-piece" -returnObject ([Ref]$delegatedFormRef) 
-<# End: Delegated Form #>
-
-<# Begin: Delegated Form Task #>
-if($delegatedFormRef.created -eq $true) { 
-	$tmpScript = @'
-HID-Write-Status -Message "Members to add: $MembersToAdd" -Event Information
-HID-Write-Status -Message "Members to remove: $MembersToRemove" -Event Information
-
-$connected = $false
-try {
-	Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
-	$pwd = ConvertTo-SecureString -string $SharePointAdminPWD -AsPlainText -Force
-	$cred = [System.Management.Automation.PSCredential]::new($SharePointAdminUser,$pwd)
-	$null = Connect-SPOService -Url $SharePointBaseUrl -Credential $cred
-    HID-Write-Status -Message "Connected to Microsoft SharePoint" -Event Information
-    HID-Write-Summary -Message "Connected to Microsoft SharePoint" -Event Information
-	$connected = $true
-}
-catch
-{	
-    HID-Write-Status -Message "Could not connect to Microsoft SharePoint. Error: $($_.Exception.Message)" -Event Error
-    HID-Write-Summary -Message "Failed to connect to Microsoft SharePoint" -Event Failed
-}
-
-if ($connected)
-{
-	try{
-        if($MembersToAdd -ne "[]"){
-            HID-Write-Status -Message "Starting to add Users to Members of [$groupId]: $MembersToAdd" -Event Information
-            $usersToAddJson =  $MembersToAdd | ConvertFrom-Json
-            
-            foreach($user in $usersToAddJson)
-            {
-                try{
-                    $username = $user.User
-                    Add-SPOUser -Site $siteUrl -Group $groupId -LoginName $username
-                    HID-Write-Status -Message "Finished adding User [$username] to Members of [$groupId]" -Event Success
-                    HID-Write-Summary -Message "Successfully added User [$username] to Members of [$groupId]" -Event Success
-                }
-                catch{
-                    HID-Write-Status -Message "Could not add User [$username] to Members of [$groupId]. Error: $($_.Exception.Message)" -Event Error
-                    HID-Write-Summary -Message "Failed to add User [$username] to Members of [$groupId]" -Event Failed
-                }
-            }
-        }
-        
-        if($MembersToRemove -ne "[]"){
-            HID-Write-Status -Message "Starting to remove Users to Members of [$groupId]: $MembersToRemove" -Event Information
-            $usersToRemoveJson =  $MembersToRemove | ConvertFrom-Json
-                
-            foreach($user in $usersToRemoveJson)
-            {
-                try{
-                    $username = $user.User
-                    Remove-SPOUser -Site $siteUrl -Group $groupId -LoginName $username
-                    HID-Write-Status -Message "Finished removing User [$username] from Members of [$groupId]" -Event Success
-                    HID-Write-Summary -Message "Successfully removed User [$username] from Members of [$groupId]" -Event Success
-                }
-                catch{
-                    HID-Write-Status -Message "Could not remove User [$username] from Members of [$groupId]. Error: $($_.Exception.Message)" -Event Error
-                    HID-Write-Summary -Message "Failed to remove User [$username] from Members of [$groupId]" -Event Failed
-                }
-            }   
-        }
-    }
-    catch
-	{
-		HID-Write-Status -Message "Could not manage members of group [$groupId]. Error: $($_.Exception.Message)" -Event Error
-		HID-Write-Summary -Message "Failed to manage members of group [$groupId]" -Event Failed
-	}
-    finally
-    {
-        Disconnect-SPOService
-        Remove-Module Microsoft.Online.SharePoint.PowerShell
-    }
-}
-'@; 
-
-	$tmpVariables = @'
-[{"name":"groupId","value":"{{form.sharepointGroups.GroupName}}","secret":false,"typeConstraint":"string"},{"name":"MembersToAdd","value":"{{form.members.leftToRight.toJsonString}}","secret":false,"typeConstraint":"string"},{"name":"MembersToRemove","value":"{{form.members.rightToLeft.toJsonString}}","secret":false,"typeConstraint":"string"},{"name":"siteUrl","value":"{{form.sites.Url}}","secret":false,"typeConstraint":"string"}]
+$tmpTask = @'
+{"name":"SharePoint - Manage Site Members","script":"$VerbosePreference = \"SilentlyContinue\"\n$InformationPreference = \"Continue\"\n$WarningPreference = \"Continue\"\n\n# variables configured in form:\n$groupId = $form.sharepointGroups.GroupName\n$membersToAdd = $form.members.leftToRight\n$membersToRemove = $form.members.rightToLeft\n$siteUrl = $form.sites.Url\n\nWrite-Verbose \"Members to add: $membersToAdd\"\nWrite-Verbose \"Members to remove: $membersToRemove\"\n\n$connected = $false\ntry {\n    Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking\n    $pwd = ConvertTo-SecureString -string $SharePointAdminPWD -AsPlainText -Force\n    $cred = [System.Management.Automation.PSCredential]::new($SharePointAdminUser, $pwd)\n    $null = Connect-SPOService -Url $SharePointBaseUrl -Credential $cred\n    Write-Information \"Connected to Microsoft SharePoint\"\n    $connected = $true\n}\ncatch {\t\n    Write-Error \"Could not connect to Microsoft SharePoint. Error: $($_.Exception.Message)\"\n}\n\nif ($connected) {\n    try {\n        foreach ($user in $membersToAdd) {\n            try {\n                $username = $user.User\n                $addSPOUser = Add-SPOUser -Site $siteUrl -Group $groupId -LoginName $username\n                Write-Information \"Successfully added User [$username] to Members of [$groupId]\"\n\n                $userDisplayName = $adUser.Name\n                $userId = $user.User\n                $Log = @{\n                    Action            = \"GrantMembership\" # optional. ENUM (undefined = default) \n                    System            = \"SharePoint\" # optional (free format text) \n                    Message           = \"Successfully added User [$username] to Members of [$groupId]\" # required (free format text) \n                    IsError           = $false # optional. Elastic reporting purposes only. (default = $false. $true = Executed action returned an error) \n                    TargetDisplayName = $userDisplayName # optional (free format text) \n                    TargetIdentifier  = $userId # optional (free format text) \n                }\n                #send result back  \n                Write-Information -Tags \"Audit\" -MessageData $log\n            }\n            catch {\n                Write-Error \"Could not add User [$username] to Members of [$groupId]. Error: $($_.Exception.Message)\"\n\n                $userDisplayName = $adUser.Name\n                $userId = $user.User\n                $Log = @{\n                    Action            = \"GrantMembership\" # optional. ENUM (undefined = default) \n                    System            = \"SharePoint\" # optional (free format text) \n                    Message           = \"Failed to add User [$username] to Members of [$groupId]. Error: $($_.Exception.Message)\" # required (free format text) \n                    IsError           = $true # optional. Elastic reporting purposes only. (default = $false. $true = Executed action returned an error) \n                    TargetDisplayName = $userDisplayName # optional (free format text) \n                    TargetIdentifier  = $userId # optional (free format text) \n                }\n                #send result back  \n                Write-Information -Tags \"Audit\" -MessageData $log\n            }\n        }\n\n        foreach ($user in $membersToRemove) {\n            try {\n                $username = $user.User\n                $removeSPOUser = Remove-SPOUser -Site $siteUrl -Group $groupId -LoginName $username\n                Write-Information \"Successfully removed User [$username] from Members of [$groupId]\" -Event Success\n            \n                $userDisplayName = $adUser.Name\n                $userId = $user.User\n                $Log = @{\n                    Action            = \"RevokeMembership\" # optional. ENUM (undefined = default) \n                    System            = \"SharePoint\" # optional (free format text) \n                    Message           = \"Successfully removed User [$username] from Members of [$groupId]\" # required (free format text) \n                    IsError           = $false # optional. Elastic reporting purposes only. (default = $false. $true = Executed action returned an error) \n                    TargetDisplayName = $userDisplayName # optional (free format text) \n                    TargetIdentifier  = $userId # optional (free format text) \n                }\n                #send result back  \n                Write-Information -Tags \"Audit\" -MessageData $log\n            }\n            catch {\n                Write-Error \"Could not remove User [$username] from Members of [$groupId]. Error: $($_.Exception.Message)\"\n            \n                $userDisplayName = $adUser.Name\n                $userId = $user.User\n                $Log = @{\n                    Action            = \"RevokeMembership\" # optional. ENUM (undefined = default) \n                    System            = \"SharePoint\" # optional (free format text) \n                    Message           = \"Failed to remove User [$username] from Members of [$groupId]. Error: $($_.Exception.Message)\" # required (free format text) \n                    IsError           = $true # optional. Elastic reporting purposes only. (default = $false. $true = Executed action returned an error) \n                    TargetDisplayName = $userDisplayName # optional (free format text) \n                    TargetIdentifier  = $userId # optional (free format text) \n                }\n                #send result back  \n                Write-Information -Tags \"Audit\" -MessageData $log\n            }\n        }   \n    }\n    finally {\n        Disconnect-SPOService\n        Remove-Module Microsoft.Online.SharePoint.PowerShell\n    }\n}","runInCloud":false}
 '@ 
 
-	$delegatedFormTaskGuid = [PSCustomObject]@{} 
-$delegatedFormTaskName = @'
-SharePoint - Manage SharePoint Members
-'@
-	Invoke-HelloIDAutomationTask -TaskName $delegatedFormTaskName -UseTemplate "False" -AutomationContainer "8" -Variables $tmpVariables -PowershellScript $tmpScript -ObjectGuid $delegatedFormRef.guid -ForceCreateTask $true -returnObject ([Ref]$delegatedFormTaskGuid) 
-} else {
-	Write-Warning "Delegated form '$delegatedFormName' already exists. Nothing to do with the Delegated Form task..." 
-}
-<# End: Delegated Form Task #>
+Invoke-HelloIDDelegatedForm -DelegatedFormName $delegatedFormName -DynamicFormGuid $dynamicFormGuid -AccessGroups $delegatedFormAccessGroupGuids -Categories $delegatedFormCategoryGuids -UseFaIcon "True" -FaIcon "fa fa-puzzle-piece" -task $tmpTask -returnObject ([Ref]$delegatedFormRef) 
+<# End: Delegated Form #>
+
