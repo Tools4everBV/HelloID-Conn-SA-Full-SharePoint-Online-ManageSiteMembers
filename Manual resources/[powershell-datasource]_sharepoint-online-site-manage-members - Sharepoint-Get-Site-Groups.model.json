@@ -1,0 +1,18 @@
+[
+    {
+        "key":  "GroupName",
+        "type":  0
+    },
+    {
+        "key":  "OwnersUri",
+        "type":  0
+    },
+    {
+        "key":  "UsersUri",
+        "type":  0
+    },
+    {
+        "key":  "Id",
+        "type":  0
+    }
+]
