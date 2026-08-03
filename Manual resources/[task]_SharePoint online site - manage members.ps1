@@ -1,5 +1,4 @@
 # variables configured in form:
-$groupId = $form.sharepointGroups.GroupName
 $membersToAdd = $form.members.leftToRight | Select-Object -Unique *
 $membersToRemove = $form.members.rightToLeft | Select-Object -Unique *
 $siteUrl = $form.sites.Site
@@ -216,7 +215,6 @@ function Add-SharePointGroupMembers {
         $response = Invoke-RestMethod @addMemberToGroupSplatParams        
     }
     catch {
-        Write-Error "Failed to add member to group: $_"
         throw
     }
 }
@@ -244,7 +242,6 @@ function Remove-SharePointGroupMembers {
         $response = Invoke-RestMethod @removeMemberToGroupSplatParams        
     }
     catch {
-        Write-Error "Failed to remove member from group: $_"
         throw
     }
 }
@@ -273,7 +270,6 @@ function Get-SharePointUserIdByUsername {
         return ($response.value | Where-Object { $_.UserPrincipalName -eq $userName}).ID
     }
     catch {
-        Write-Error "Failed to retrieve userid of member: $_"
         throw
     }
 }
@@ -345,7 +341,7 @@ try {
             System            = "SharePoint" # optional (free format text) 
             Message           = "Successfully removed User [$($user.DisplayName)] from Members of [$($form.sharepointGroups.GroupName)]" # required (free format text) 
             IsError           = $false # optional. Elastic reporting purposes only. (default = $false. $true = Executed action returned an error) 
-            TargetDisplayName = $($user.Name) # optional (free format text) 
+            TargetDisplayName = $($user.displayName) # optional (free format text) 
             TargetIdentifier  = $($form.sites.GroupId) # optional (free format text) 
         }
         #send result back  

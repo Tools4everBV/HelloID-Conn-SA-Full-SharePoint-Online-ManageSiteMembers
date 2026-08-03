@@ -200,7 +200,6 @@ function Get-SharePointGroups {
         return $response.d.results
     }
     catch {
-        Write-Error "Failed to retrieve site groups: $_"
         throw
     }
 }
@@ -214,7 +213,7 @@ try {
 
     # Create access token
     $actionMessage = "creating access token"
-    $entraToken = Get-MSEntraAccessToken -Certificate $certificate -AppId $EntraIdAppId -TenantId $EntraIdTenantId -Resource "https://jbt4e.sharepoint.com" 
+    $entraToken = Get-MSEntraAccessToken -Certificate $certificate -AppId $EntraIdAppId -TenantId $EntraIdTenantId -Resource $SharePointBaseUrl 
     Write-Verbose "Created access token"
 
     # Create headers

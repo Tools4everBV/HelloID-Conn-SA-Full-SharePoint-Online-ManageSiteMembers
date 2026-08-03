@@ -24,6 +24,9 @@ This HelloID Service Automation Delegated Form provides SharePoint Online functi
 4.  Manage the members of the selected group
 5.  Confirm the changes
 
+## Getting started
+### Requirements
+
 #### App Registration & Certificate Setup
 
 Before implementing this connector, make sure to configure a Microsoft Entra ID App Registration. During the setup process, you'll create a new App Registration in the Entra portal, assign the necessary API permissions (such as user and group read/write), and generate and assign a certificate.

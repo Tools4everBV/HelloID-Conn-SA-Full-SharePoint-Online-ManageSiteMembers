@@ -196,7 +196,6 @@ function Get-SharePointGroupMembers {
         return $response.d.results
     }
     catch {
-        Write-Error "Failed to retrieve site groups: $_"
         throw
     }
 }
